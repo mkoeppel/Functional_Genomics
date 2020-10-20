@@ -1,0 +1,66 @@
+---
+title: "Functional_Genomics"
+author: "MKO"
+date: "10/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+It contains the necessary steps to process NGS data derived from a typical functional genomics experiment:
+
+The data used was generated in my lab at the DSMZ-Leibniz-Institut and is, so far, unpublished. Therefore, the raw-data has not yet been deposited to any nucleic acid archive. Provided is a form of pre-processed data, which is small enough to be distributed with the repo. All pre-processing steps are documented below and are standard first level analysis of NGS-data, that is quality-control and mapping/ counting to a reference genome.
+
+A typical research question for such an experiment would be:
+Which genes are directly regulated by a particular transcription factor?
+  - This requires knowledge about those genes that change their expression, when the abundance of this particular transcription factor is changed (typically via siRNA-knockdown or overexpression; here it is a knockdown).
+  - As genes can also change their expression due to indirect/ secondary effects, binding sites of the transcription factor within the genomic sequences also need to be identified and assigned to target genes.
+In combination these two experiements allow the prediction of direct, real target genes with high probability.
+
+
+1. load all necessary packages
+
+```{r}
+library(tidyverse) # package for data wrangling and data visualization
+library(DESeq2) # package for analysis of differential expresion
+library("org.Hs.eg.db") # package to annotate genes 
+library(ChIPseeker) # package to annotate ChIP-seq peaks
+library(TxDb.Hsapiens.UCSC.hg38.knownGene) # another annotation package to assign genes to genomic regions
+library(clusterProfiler) # package to assign funcitonal enrichmets to sets of genes
+```
+
+2. define path to and read data-files for RNA-seq and ChIP-seq data
+generates a table of RNA-seq data from the 3 replicates of control and the 3 replicates of knockdown samples
+also reads the genomic binding sites identified by ChIP-seq and predicted using MACS2 from within the GALAXY-suite
+
+```{r, echo=FALSE}
+directory = "./data/rna_seq_counts/48h"
+sampleFiles = grep("counts",list.files(directory),value=TRUE) 
+sampleCondition = substr(sampleFiles, 8,14) 
+sampleTable = data.frame(sampleName = sampleFiles,
+                          fileName = sampleFiles,
+                          experiment = sampleFiles,
+                          condition = sampleCondition)
+
+mef2d = readPeakFile("./data/Galaxy_MACS2_MEF2D_OA_repl_q005_dupAll.bed")
+
+```
+
+
+```{r, echo=FALSE}
+ddsHTSeq = DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
+                                       directory = directory,
+                                       design= ~ condition)
+ddsHTSeq
+
+keep = rowSums(counts(ddsHTSeq)) >= 10 
+ddsHTSeq = ddsHTSeq[keep,]
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

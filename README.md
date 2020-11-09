@@ -1,5 +1,5 @@
 # Functional_Genomics
-Finding real and direct target genes for a transcription factor.
+Finding real and direct target genes for a transcription factor is a challenging task in molecular biology. \
 It is an example of an analytical pipeline from high-throughput sequencing (NGS) in molecular biology. 
 It as an R-script, I created when teaching bioinformatics at the University of Applied Sciences in Bremen (HSB) in 2020.
 

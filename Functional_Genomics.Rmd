@@ -23,18 +23,26 @@ Which genes are directly regulated by a particular transcription factor?
   - As genes can also change their expression due to indirect/ secondary effects, binding sites of the transcription factor within the genomic sequences also need to be identified and assigned to target genes.
 In combination these two experiements allow the prediction of direct, real target genes with high probability.
 
+As a factor, the Myocyte Enhancer Factor 2D (MEF2D) was examined. It is a transcription factor that is originally involved in the differentiation of muscle cells. However different mutations, usually involving some kind of translocation, cause it to act as an oncogene involved in the onset of different forms of leukemia.
+The cellular system used to examine the behaviour of this factor was the acute myeloid leukemia cell line OCI-AML3, as it has high mRNA levels and also clearly detectable protein-levels of this factor.
 
 1. load all necessary packages
 
 ```{r}
 library(tidyverse) # package for data wrangling and data visualization
 library(DESeq2) # package for analysis of differential expresion
-library("org.Hs.eg.db") # package to annotate genes 
+library("org.Hs.eg.db") # package to annotate genes
 library(ChIPseeker) # package to annotate ChIP-seq peaks
 library(TxDb.Hsapiens.UCSC.hg38.knownGene) # another annotation package to assign genes to genomic regions
 library(clusterProfiler) # package to assign funcitonal enrichmets to sets of genes
 library(chipenrich)
+library(ReactomePA)
 
+###for individual peak Files
+library(Gviz)
+#library(GenomicInteractions)
+#library(rtracklayer)
+#library(DOSE)
 ```
 
 2. define path to and read data-files for RNA-seq and ChIP-seq data
@@ -43,8 +51,8 @@ also reads the genomic binding sites identified by ChIP-seq and predicted using 
 
 ```{r}
 directory = "./data/rna_seq_counts/24h"
-sampleFiles = grep("counts",list.files(directory),value=TRUE) 
-sampleCondition = substr(sampleFiles, 8,14) 
+sampleFiles = grep("counts",list.files(directory),value=TRUE)
+sampleCondition = substr(sampleFiles, 8,14)
 sampleTable = data.frame(sampleName = sampleFiles,
                           fileName = sampleFiles,
                           experiment = sampleFiles,
@@ -61,23 +69,43 @@ ddsHTSeq = DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
                                        design= ~ condition)
 ddsHTSeq
 
-keep = rowSums(counts(ddsHTSeq)) >= 10 
+keep = rowSums(counts(ddsHTSeq)) >= 10
 ddsHTSeq = ddsHTSeq[keep,]
 ```
 
 4. calculation of significantly changing genes, candidates are sorted by p-value and a p-value cut-off < 0.1 is chosen
 (although this is a rather high p-value, so not very significant, the designed experiment with a knockdown instead of a knockout can be expected to have less drastic effects and to keep a rather large set of output-genes for the next steps a less stringent p-value is preferred)
 ```{r}
-ddsHTSeq = DESeq(ddsHTSeq) 
+ddsHTSeq = DESeq(ddsHTSeq)
 res = results(ddsHTSeq)
-res = results(ddsHTSeq, name = "condition_siMEF24_vs_siCTR24") 
-resOrdered = res[order(res$pvalue),] 
-summary(res) 
+res = results(ddsHTSeq, name = "condition_siMEF24_vs_siCTR24")
+resOrdered = res[order(res$pvalue),]
+summary(res)
 sum(res$padj < 0.1, na.rm = TRUE)
 ```
 
 5. post-processing of results from differential expression analysis
-  - this includes the addition of gene-names and a variance-stabilized transformation (vst) to normalize counts and allow improved plotting
+  - this includes a variance-stabilized transformation (vst) to normalize counts and allow improved plotting
+
+Graphical display of different key parameters
+  - the MA-plot shows those genes that have an expresisonal change and a significance-value above the threshold (shown in red).
+  - plotCounts shows the expression of the two conditions for the gene with the lowest p-value (highest significance), which should be the factor targeted by the knowckdown: MEF2D.
+  - principal component analysis shows the differences/ similarities between the replicates of the two conditions (note that PC1, explaining 70% of observed variance separates the control and MEF2D-knockdown, while PC2, explaining 18% variance separates the different repliactes of each condition).
+```{r}
+
+# variance-stabilzed transformation
+vsd<-vst(ddsHTSeq)
+head(assay(vsd), 3)
+VSD<-as.data.frame(assay(vsd))
+VSD<-rownames_to_column(VSD, var = "ENSEMBL")
+
+plotMA(res, ylim = c(-2,2), main = "significanlty changing genes")
+plotCounts(ddsHTSeq, gene=which.min(res$padj), intgroup="condition")
+plotPCA(vsd)
+
+```
+
+6. Transformation of data to perform subsequent analysis, like integration with ChIP-seq data, functional annotations and more plotting
 ```{r}
 MEF2D_si24 = as.data.frame(res)
 MEF2D_si24 = rownames_to_column(MEF2D_si24, var = "ENSEMBL")
@@ -87,30 +115,33 @@ Norm_MEF2D_si24 = left_join(MEF2D_si24, counts)
 symbols = mapIds(org.Hs.eg.db, keys = Norm_MEF2D_si24$ENSEMBL, keytype = "ENSEMBL", column = "SYMBOL")
 symbols = as.data.frame(symbols)
 MEF2D_si24_Norm_Symbol = bind_cols(symbols, Norm_MEF2D_si24)
-
-# variance-stabilzed transformation
-vsd<-vst(ddsHTSeq)
-head(assay(vsd), 3)
-VSD<-as.data.frame(assay(vsd))
-VSD<-rownames_to_column(VSD, var = "ENSEMBL")
-
 ```
-6. graphical display of different key parameters
-  - plotCounts shows the expression of the two conditions for the gene with the lowest p-value (highest significance)
-```{r}
 
-plotMA(res, ylim=c(-2,2), main="no LFC shrinkage")
-plotCounts(ddsHTSeq, gene=which.min(res$padj), intgroup="condition")
-plotPCA(vsd)
-```
-7. identification of genes with binding-sites in their vicinity
+7. Use ChIP-seq data for the identification of direct target genes:
+  - analyze the distribution of binding sites across the human genome
 ```{r}
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 promoter <- getPromoters(TxDb=txdb, upstream=3000, downstream=3000)
-mef2d_Anno<-annotatePeak(mef2d, tssRegion=c(-1000, 1000), TxDb=txdb, annoDb="org.Hs.eg.db")
+
+mef2d_Anno<-annotatePeak(mef2d, tssRegion=c(-3000, 3000), TxDb=txdb, annoDb="org.Hs.eg.db")
 plotAnnoBar(mef2d_Anno)
 
+tagMatrix <- getTagMatrix(mef2d, windows=promoter)
+tagHeatmap(tagMatrix , xlim=c(-3000,3000), color ="red")
+plotAvgProf(tagMatrix, xlim=c(-3000, 3000),
+            xlab="Genomic Region (5'->3')", ylab = "Read Count Frequency")
+
+
+```
+
+
+8. identification of genes with binding-sites in their vicinity
+```{r}
+
 mef2d_gene <- seq2gene(mef2d, tssRegion = c(-1000, 1000), flankDistance = 3000, TxDb=txdb)
+pathway2 <- enrichPathway(mef2d_gene)
+dotplot(pathway2, title="OCI-AML-3 MEF2D")
+
 
 MEF2D_anno<-as.data.frame(mef2d_Anno)
 MEF2D_peaks<-MEF2D_anno[,c(1:7,13,21:23)]
@@ -118,6 +149,5 @@ colnames(MEF2D_peaks)<-c("chr","start", "end", "peak_width", "strand", "peakID",
 MEF2D_targets<-MEF2D_peaks%>%left_join(Norm_MEF2D_si24)
 #gene<-bitr(MEF2D_targets$ENSEMBL, fromType = 'ENSEMBL', toType = 'ENTREZID', OrgDb = 'org.Hs.eg.db')
 p<-enrichGO(gene = MEF2D_targets$ENSEMBL,OrgDb = 'org.Hs.eg.db',keyType = 'ENSEMBL',ont='MF', pvalueCutoff = 0.05,pAdjustMethod = 'BH')
-p
+dotplot(p, title="OCI-AML-3 MEF2D")
 ```
-

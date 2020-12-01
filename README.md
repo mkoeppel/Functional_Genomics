@@ -19,7 +19,7 @@ The cellular system used to examine the behaviour of this factor was the acute m
 ### examples (intermediate) results from the pipeline:
 
   - DESeq2 output of differtially regulated genes:
-  [!alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/MA_plot_significant_genes.jpeg)
+  ![alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/MA_plot_significant_genes.jpeg)
 
 Pre-processing that is not included: \
 sequencing and fastq generation \ 

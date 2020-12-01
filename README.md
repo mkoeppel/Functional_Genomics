@@ -16,8 +16,23 @@ In combination these two experiements allow the prediction of direct, real targe
 As a factor, the Myocyte Enhancer Factor 2D (MEF2D) was examined. It is a transcription factor that is originally involved in the differentiation of muscle cells. However, different mutations, usually involving some kind of translocation, cause it to act as an oncogene involved in the onset of different forms of leukemia. 
 The cellular system used to examine the behaviour of this factor was the acute myeloid leukemia cell line OCI-AML3, as it has high mRNA levels and also clearly detectable protein-levels of this factor. 
 
+### examples (intermediate) results from the pipeline:
 
+  - DESeq2 output of differtially regulated genes:
+  ![alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/MA_plot_significant_genes.jpeg)
 
+  - Distirbution of MEF2D binding signal acorss the start site of genes
+   ![alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/MEF2D-Signal_TSS.jpeg)
+   
+  - Detailed example of the direct target gene HDAC9 (shown is the extent of MEF2D binding and the transcriptional consequences of MEF2D-kd)
+  ![alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/HDAC9_example.jpeg)
+  
+  - Expressional changes of the direct target genes of MEF2D after knock-down with siRNAs
+  ![alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/heatmap_MEF2D_targets.jpeg)
+  
+  - Functional evaluation of pathways affected by the direct MEF2D target genes
+  ![alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/Reactome_MEF2D-targets.jpeg)
+  
 Pre-processing that is not included: \
 sequencing and fastq generation \ 
 demultiplexing: bcl2fastq (v2.17.1.14, Illumina) \

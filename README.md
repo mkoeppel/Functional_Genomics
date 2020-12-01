@@ -18,10 +18,11 @@ The cellular system used to examine the behaviour of this factor was the acute m
 
 
 
-Pre-processing that is not included:
-sequencing and fastq generation, 
-demultiplexing: bcl2fastq (v2.17.1.14, Illumina)
-trimming: fastq-mcf (ea-utils 1.04.807)
-quality control: FastQC (v0.11.5). For gene expression
-alignement: STAR (2.5.3a)52 to the Gencode Homo sapiens genome (v26) and converted/sorted via samtools
+Pre-processing that is not included: \
+sequencing and fastq generation \ 
+demultiplexing: bcl2fastq (v2.17.1.14, Illumina) \
+trimming: fastq-mcf (ea-utils 1.04.807) \
+quality control: FastQC (v0.11.5) \
+alignement: STAR (2.5.3a) to the Gencode Homo sapiens genome (v26) \
+conversion: samtools \
 expression analysis: HTSeq-count python script (0.8.0)

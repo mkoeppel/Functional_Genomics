@@ -16,7 +16,10 @@ In combination these two experiements allow the prediction of direct, real targe
 As a factor, the Myocyte Enhancer Factor 2D (MEF2D) was examined. It is a transcription factor that is originally involved in the differentiation of muscle cells. However, different mutations, usually involving some kind of translocation, cause it to act as an oncogene involved in the onset of different forms of leukemia. 
 The cellular system used to examine the behaviour of this factor was the acute myeloid leukemia cell line OCI-AML3, as it has high mRNA levels and also clearly detectable protein-levels of this factor. 
 
+### examples (intermediate) results from the pipeline:
 
+  - DESeq2 output of differtially regulated genes:
+  [!alt text](https://github.com/mkoeppel/Functional_Genomics/blob/main/MA_plot_significant_genes.jpeg)
 
 Pre-processing that is not included: \
 sequencing and fastq generation \ 

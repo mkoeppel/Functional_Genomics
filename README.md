@@ -3,7 +3,7 @@ Finding real and direct target genes for a transcription factor is a challenging
 This R-script script is an example of an analytical pipeline from high-throughput sequencing (NGS) in functional genomics. 
 It was created as a part of the curriculum when I was teaching bioinformatics at the University of Applied Sciences in Bremen (HSB) in 2020.
 
-The data used was generated in my lab at the DSMZ-Leibniz-Institut and, so far, is unpublished. Therefore, the raw-data has not yet been deposited to any nucleic acid archive. Provided is a form of pre-processed data, which is small enough to be distributed with the repo. All preprocessing steps are documented below and are standard first level analysis of NGS-data, that is quality-control and mapping/ counting to a reference genome. 
+The data used was generated in my lab at the DSMZ-Leibniz-Institut and, so far, is unpublished. Therefore, the raw-data has not yet been deposited to any nucleic acid archive. Provided is a form of pre-processed data, which is small enough to be distributed with the repo. All preprocessing steps are documented below and are standard first level analysis of NGS-data, that is quality-control and mapping/ counting to a reference genome.
 
 This repo contains the necessary steps to process NGS data derived from a typical functional genomics experiment:
 
@@ -15,3 +15,13 @@ In combination these two experiements allow the prediction of direct, real targe
 
 As a factor, the Myocyte Enhancer Factor 2D (MEF2D) was examined. It is a transcription factor that is originally involved in the differentiation of muscle cells. However different mutations, usually involving some kind of translocation, cause it to act as an oncogene involved in the onset of different forms of leukemia. 
 The cellular system used to examine the behaviour of this factor was the acute myeloid leukemia cell line OCI-AML3, as it has high mRNA levels and also clearly detectable protein-levels of this factor. 
+
+
+
+Pre-processing that is not included:
+sequencing and fastq generation, 
+demultiplexing: bcl2fastq (v2.17.1.14, Illumina)
+trimming: fastq-mcf (ea-utils 1.04.807)
+quality control: FastQC (v0.11.5). For gene expression
+alignement: STAR (2.5.3a)52 to the Gencode Homo sapiens genome (v26) and converted/sorted via samtools
+expression analysis: HTSeq-count python script (0.8.0)

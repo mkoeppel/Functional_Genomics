@@ -21,8 +21,9 @@ The data used was generated in my lab at the DSMZ-Leibniz-Institut and is, so fa
 Following sequencing and fastq generation, 
 demultiplexing: bcl2fastq (v2.17.1.14, Illumina)
 trimming: fastq-mcf (ea-utils 1.04.807)
-quality control: FastQC (v0.11.5). For gene expression
-alignement: STAR (2.5.3a)52 to the Gencode Homo sapiens genome (v26) and converted/sorted via samtools
+quality control: FastQC (v0.11.5) 
+alignement: STAR (2.5.3a) to the Gencode Homo sapiens genome (v26)
+conversion to BAM / sorting: samtools (1.9)
 expression analysis: HTSeq-count python script (0.8.0)
 
 
@@ -60,7 +61,9 @@ also reads the genomic binding sites identified by ChIP-seq and predicted using 
 
 ```{r}
 directory = "./data/rna_seq_counts/24h"
-sampleFiles = grep("counts",list.files(directory),value=TRUE)
+sampleFiles = grep("counts",
+                   list.files(directory),
+                   value=TRUE)
 sampleCondition = substr(sampleFiles, 8,14)
 sampleTable = data.frame(sampleName=sampleFiles,
                           fileName=sampleFiles,
@@ -85,6 +88,16 @@ ddsHTSeq = ddsHTSeq[keep,]
 4. calculation of significantly changing genes, candidates are sorted by p-value and a p-value cut-off < 0.1 is chosen
 (although this is a rather high p-value, so not very significant, the designed experiment with a knockdown instead of a knockout can be expected to have less drastic effects and to keep a rather large set of output-genes for the next steps a less stringent p-value is preferred)
 ```{r}
+# instead of the summarizing DESeq-function individual steps can also be taken to obtain intermediate results. Below, both possibilites are given:
+
+# 4a: intermediate steps
+ddsHTSeq_size_factor = estimateSizeFactors(ddsHTSeq)
+sizeFactors(ddsHTSeq_size_factor)
+ddsHTSeq_dispersion = estimateDispersions(ddsHTSeq_size_factor)
+ddsHTSeq_GLM = nbinomWaldTest(ddsHTSeq_dispersion)
+stepwise_results = results(ddsHTSeq_GLM, name="condition_siMEF24_vs_siCTR24")
+
+# 4b: run in wrapper-function
 ddsHTSeq = DESeq(ddsHTSeq)
 res = results(ddsHTSeq, name="condition_siMEF24_vs_siCTR24")
 resOrdered = res[order(res$pvalue),]
@@ -107,8 +120,12 @@ head(assay(vsd), 3)
 VSD = as.data.frame(assay(vsd))
 VSD = rownames_to_column(VSD, var="ENSEMBL")
 
-plotMA(res, ylim=c(-2,2), main="significantly changing genes")
-plotCounts(ddsHTSeq, gene = which.min(res$padj), intgroup="condition")
+plotMA(res, 
+       ylim=c(-2,2), 
+       main="significantly changing genes")
+plotCounts(ddsHTSeq, 
+           gene = which.min(res$padj), 
+           intgroup="condition")
 plotPCA(vsd)
 
 ```
@@ -120,7 +137,10 @@ MEF2D_si24 = rownames_to_column(MEF2D_si24, var="ENSEMBL")
 counts = as.data.frame(counts(ddsHTSeq, normalized=T))
 counts = rownames_to_column(counts, var="ENSEMBL")
 Norm_MEF2D_si24 = left_join(MEF2D_si24, counts)
-symbols = mapIds(org.Hs.eg.db, keys=Norm_MEF2D_si24$ENSEMBL, keytype="ENSEMBL", column="SYMBOL")
+symbols = mapIds(org.Hs.eg.db, 
+                 keys=Norm_MEF2D_si24$ENSEMBL, 
+                 keytype="ENSEMBL", 
+                 column="SYMBOL")
 symbols = as.data.frame(symbols)
 MEF2D_si24_Norm_Symbol = bind_cols(symbols, Norm_MEF2D_si24)
 ```
@@ -129,17 +149,21 @@ MEF2D_si24_Norm_Symbol = bind_cols(symbols, Norm_MEF2D_si24)
   - analyze the distribution of binding sites across the human genome
 ```{r}
 txdb = TxDb.Hsapiens.UCSC.hg38.knownGene
-promoter = getPromoters(TxDb=txdb, upstream=3000, downstream=3000)
+promoter = getPromoters(TxDb=txdb, 
+                        upstream=3000, downstream=3000)
 
-mef2d_Anno = annotatePeak(mef2d, tssRegion=c(-3000, 3000), TxDb=txdb, annoDb="org.Hs.eg.db")
+mef2d_Anno = annotatePeak(mef2d, 
+                          tssRegion=c(-3000, 3000), 
+                          TxDb=txdb, annoDb="org.Hs.eg.db")
 plotAnnoBar(mef2d_Anno)
 
 tagMatrix = getTagMatrix(mef2d, windows=promoter)
-tagHeatmap(tagMatrix , xlim=c(-3000,3000), color="red")
-plotAvgProf(tagMatrix, xlim=c(-3000, 3000),
+tagHeatmap(tagMatrix , 
+           xlim=c(-3000,3000), color="red")
+plotAvgProf(tagMatrix, 
+            xlim=c(-3000, 3000),
             xlab="Genomic Region (5'->3')", ylab="Read Count Frequency") + 
             ggtitle("Factor binding signal at start site of genes")
-
 
 ```
 
@@ -147,20 +171,25 @@ plotAvgProf(tagMatrix, xlim=c(-3000, 3000),
 8. identification of genes with binding-sites in their vicinity
 ```{r}
 
-mef2d_gene = seq2gene(mef2d, tssRegion=c(-1000, 1000), flankDistance=3000, TxDb=txdb)
+mef2d_gene = seq2gene(mef2d, 
+                      tssRegion=c(-1000, 1000), 
+                      flankDistance=3000, TxDb=txdb)
 pathway2 = enrichPathway(mef2d_gene)
 dotplot(pathway2, title="pathway enrichment of MEF2D target genes")
 
 
 MEF2D_anno = as.data.frame(mef2d_Anno)
 MEF2D_peaks = MEF2D_anno[,c(1:7,13,21:23)]
-colnames(MEF2D_peaks) = c("chr","start", "end", "peak_width", "strand", 
-                          "peakID", "peak_score", "annotation",
-                          "distanceToTSS", "ENSEMBL", "SYMBOL")
+colnames(MEF2D_peaks) = c("chr","start", "end", 
+                          "peak_width", "strand", 
+                          "peakID", "peak_score", 
+                          "annotation", "distanceToTSS", 
+                          "ENSEMBL", "SYMBOL")
 MEF2D_targets = MEF2D_peaks%>%left_join(Norm_MEF2D_si24)
 
 #gene<-bitr(MEF2D_targets$ENSEMBL, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
-p = enrichGO(gene=MEF2D_targets$ENSEMBL,OrgDb="org.Hs.eg.db",
+p = enrichGO(gene=MEF2D_targets$ENSEMBL, 
+             OrgDb="org.Hs.eg.db",
              keyType="ENSEMBL", ont="MF", 
              pvalueCutoff=0.05,
              pAdjustMethod="BH")
@@ -184,7 +213,9 @@ subset_targets = subset_targets[!duplicated(subset_targets["ENSEMBL"]),]
 library(gplots)
 
 heatAll = subset_targets[,c(18:23)]
-colnames(heatAll) = c("siCTR_1", "siCTR_2", "siCTR_3","siMEF2D_1", "siMEF2D_2", "siMEF2D_3") 
+colnames(heatAll) = c("siCTR_1", "siCTR_2", 
+                      "siCTR_3","siMEF2D_1", 
+                      "siMEF2D_2", "siMEF2D_3") 
 rownames(heatAll) = subset_targets[,11]
 
 tab = as.matrix(heatAll, as.is=T, header=T, row.names=1)
@@ -193,11 +224,12 @@ RColorBrewer::brewer.pal(n=6,"Set1")
 cols   = colorpanel(15,"#2c7bb6","grey96","#d7191c")
 
 
-heatmap.2(tab,col=cols, margins=c(10,5), scale="row",
-          dendrogram="col", Colv=T, Rowv=T, key=TRUE, 
-          main="expression of MEF2D target genes",
+heatmap.2(tab,col=cols, margins=c(10,5), 
+          scale="row", dendrogram="col", 
+          Colv=T, Rowv=T, 
+          key=TRUE, main="expression of MEF2D target genes",
           density.info="none", trace="none", 
-    cexRow=0.5,cexCol=0.8)
+          cexRow=0.5, cexCol=0.8)
 dev.off()
 ```
 

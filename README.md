@@ -1,5 +1,5 @@
 # Functional_Genomics
-A particular phenotype of an organism or an individual cells is defined by the cellular programs that are exerted in that cell or organims at a specific point in time. These programs are driven by the activity of so-called transcription factors, proteins that regulate the activity of genes and thereby influence that cell or organism with regard to its developmental, health or disease state. \
+A particular phenotype of an organism or an individual cells is defined by the cellular programs that are exerted in that cell or organims at a specific point in time. These programs are driven by the activity of so-called transcription factors, proteins that regulate the activity of genes and thereby influence that cell or organism with regard to its developmental, health or disease state.
 
 Finding real and direct target genes for a transcription factor is a challenging task in molecular biology. \
 This R-script script is an example of an analytical pipeline from high-throughput sequencing (NGS) in functional genomics.

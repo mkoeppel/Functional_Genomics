@@ -2,8 +2,8 @@
 A particular phenotype of an organism or an individual cells is defined by the cellular programs that are exerted in that cell or organims at a specific point in time. These programs are driven by the activity of so-called transcription factors, proteins that regulate the activity of genes and thereby influence that cell or organism with regard to its developmental, health or disease state.
 
 Finding real and direct target genes for a transcription factor is a challenging task in molecular biology. \
-This R-script script is an example of an analytical pipeline from high-throughput sequencing (NGS) in functional genomics.
-It was created as a part of the curriculum when I was teaching bioinformatics at the University of Applied Sciences in Bremen (HSB) in 2020.
+This R-script is an example of an analytical pipeline from high-throughput sequencing (NGS) in functional genomics.
+It was created as a part of the curriculum I developed when teaching bioinformatics at the University of Applied Sciences in Bremen (HSB) in 2020.
 
 The data used was generated in my lab at the DSMZ-Leibniz-Institut and, so far, is unpublished. Therefore, the raw-data has not yet been deposited to any nucleic acid archive. Provided is a form of pre-processed data, which is small enough to be distributed with the repo. All preprocessing steps are documented below and are standard first level analysis of NGS-data, that is quality-control and mapping/ counting to a reference genome.
 

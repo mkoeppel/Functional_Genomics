@@ -43,3 +43,7 @@ quality control: FastQC (v0.11.5) \
 alignement: STAR (2.5.3a) to the Gencode Homo sapiens genome (v26) \
 conversion: samtools \
 expression analysis: HTSeq-count python script (0.8.0)
+
+A very good alternativ to perform step-by-step pre-processing would be the use of nextflow-pipelines! \
+As part of the nf-core project there is a RNA-seq pipeline available (https://nf-co.re/rnaseq)
+that pre-porcesses raw data in a highly reproducible and easy-to-use fashion.

@@ -46,4 +46,4 @@ expression analysis: HTSeq-count python script (0.8.0)
 
 A very good alternativ to perform step-by-step pre-processing would be the use of nextflow-pipelines! \
 As part of the nf-core project there is a RNA-seq pipeline available (https://nf-co.re/rnaseq)
-that pre-porcesses raw data in a highly reproducible and easy-to-use fashion.
+that pre-processes raw data in a highly reproducible and easy-to-use fashion.
